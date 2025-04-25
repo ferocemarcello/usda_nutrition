@@ -67,7 +67,7 @@ def main_method(api_key, nutrient_ids, output_filename="food_nutrition_data.xlsx
     """Fetches food data and nutrient information and saves it to an Excel file."""
     page_number = 1
     progress_counter = 0
-    save_interval = 100  # Save progress every N foods
+    save_interval = 250  # Save progress every N foods
 
     workbook = openpyxl.Workbook()
     sheet = workbook.active

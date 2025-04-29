@@ -63,7 +63,7 @@ def fetch_food_details(api_key, fdc_id, nutrient_ids, max_retries=3):
     print(f"Max retries reached for fetching details for FDC ID {fdc_id}.")
     return None
 
-def main_method(api_key, nutrient_ids, output_filename="food_nutrition_data.xlsx"):
+def main_method(api_key, nutrient_ids, output_filename="food_nutrition_data.xlsx", start_fdc_id=2708323):
     """Fetches food data and nutrient information and saves it to an Excel file."""
     page_number = 1
     progress_counter = 0
@@ -94,8 +94,8 @@ def main_method(api_key, nutrient_ids, output_filename="food_nutrition_data.xlsx
 
         for food in food_list_response:
             fdc_id = food.get("fdcId")
-            description = food.get("description", "N/A")
-            if fdc_id:
+            if fdc_id and fdc_id > start_fdc_id:
+                description = food.get("description", "N/A")
                 food_details = fetch_food_details(api_key, fdc_id, nutrient_ids)
                 if food_details and FOOD_NUTRIENTS_KEY in food_details and food_details[FOOD_NUTRIENTS_KEY]:
                     row_data = [fdc_id, description]

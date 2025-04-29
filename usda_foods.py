@@ -64,7 +64,7 @@ def fetch_food_details(api_key, fdc_id, nutrient_ids, max_retries=3):
     print(f"Max retries reached for fetching details for FDC ID {fdc_id}.")
     return None
 
-def main_method(api_key, nutrient_ids, output_filename="food_nutrition_data.xlsx", start_fdc_id=2708323):
+def main_method(api_key, nutrient_ids, output_filename="food_nutrition_data.xlsx"):
     """Fetches food data and nutrient information and saves it to an Excel file.
     Only processes foods with FDC IDs greater than start_fdc_id.  Appends to existing file."""
 
@@ -89,7 +89,14 @@ def main_method(api_key, nutrient_ids, output_filename="food_nutrition_data.xlsx
         workbook = openpyxl.Workbook()
         sheet = workbook.active
         sheet.append(["fdcId", "description"] + nutrients_descriptions)  # Add header if creating new
-
+    all_food_list = []
+    while True:
+        food_list_response:dict = fetch_food_list(api_key, page_number)
+        if isinstance(food_list_response, str) and str.__eq__(food_list_response, "all_shards_failed"):
+            break
+        all_food_list.extend(food_list_response)
+        page_number += 1
+        time.sleep(0.1)
     while True:
         food_list_response:dict = fetch_food_list(api_key, page_number)
 
@@ -106,10 +113,10 @@ def main_method(api_key, nutrient_ids, output_filename="food_nutrition_data.xlsx
         if not food_list_response:
             print("No foods found on this page.")
             break
-
+        food_list_response = sorted(food_list_response, key=lambda item: item["description"])
         for food in food_list_response:
             fdc_id = food.get("fdcId")
-            if fdc_id and fdc_id > start_fdc_id:
+            if fdc_id:
                 description = food.get("description", "N/A")
                 food_details = fetch_food_details(api_key, fdc_id, nutrient_ids)
                 if food_details and FOOD_NUTRIENTS_KEY in food_details and food_details[FOOD_NUTRIENTS_KEY]:

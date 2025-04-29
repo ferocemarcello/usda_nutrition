@@ -2,6 +2,7 @@ import requests
 import openpyxl
 import time
 import json
+import os
 nutrients = {203:"Protein", 204:"Total lipid (fat)", 205:"Carbohydrate, by difference", 208:"Energy",269:"Total Sugars",291:"Fiber, total dietary",601:"Cholesterol",606:"Fatty acids, total saturated",645:"Fatty acids, total monounsaturated",646:"Fatty acids, total polyunsaturated",605:"Fatty acids, total trans",210:"Sucrose",211:"Glucose",214:"Maltose",212:"Fructose",213:"Lactose",287:"Galactose",957:"Energy (Atwater General Factors)",958:"Energy (Atwater Specific Factors)",269.3:"Sugars, Total",298:"Total fat (NLEA)",693:"Fatty acids, total trans-monoenoic",695:"Fatty acids, total trans-polyenoic",205.2:"Carbohydrate, by summation",293:"Total dietary fiber (AOAC 2011.25)"}
 nutrients_descriptions = list(nutrients.values())
 nutrients_numbers = list(nutrients.keys())
@@ -64,16 +65,30 @@ def fetch_food_details(api_key, fdc_id, nutrient_ids, max_retries=3):
     return None
 
 def main_method(api_key, nutrient_ids, output_filename="food_nutrition_data.xlsx", start_fdc_id=2708323):
-    """Fetches food data and nutrient information and saves it to an Excel file."""
+    """Fetches food data and nutrient information and saves it to an Excel file.
+    Only processes foods with FDC IDs greater than start_fdc_id.  Appends to existing file."""
+
     page_number = 1
     progress_counter = 0
     save_interval = 250  # Save progress every N foods
+    workbook = None
+    sheet = None
+    file_exists = os.path.exists(output_filename)
 
-    workbook = openpyxl.Workbook()
-    sheet = workbook.active
-    header = ["fdcId", "description"]
-    header.extend(nutrients_descriptions)
-    sheet.append(header)
+    if file_exists:
+        try:
+            workbook = openpyxl.load_workbook(output_filename)
+            sheet = workbook.active
+        except Exception as e:
+            print(f"Error opening existing workbook: {e}. Creating a new one.")
+            workbook = openpyxl.Workbook()
+            sheet = workbook.active
+            sheet.append(["fdcId", "description"] + nutrients_descriptions)  # Add header if creating new
+            file_exists = False
+    else:
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        sheet.append(["fdcId", "description"] + nutrients_descriptions)  # Add header if creating new
 
     while True:
         food_list_response:dict = fetch_food_list(api_key, page_number)

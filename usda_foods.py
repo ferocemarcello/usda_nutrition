@@ -82,7 +82,6 @@ def fetch_food_details(api_key, fdc_id, nutrient_ids, max_retries=3):
         print(f"Error fetching details for FDC ID {fdc_id}: {e}")
         append_not_found_id(fdc_id)
         return None
-    return response.json()
 
 
 def get_existing_fdc_ids(filename=OUTPUT_FILENAME):
@@ -228,4 +227,4 @@ def main_method(
 if __name__ == "__main__":
     api_key = ""
     json_filename = "food_ids.json"  # Specify the name of your JSON file
-    main_method(api_key, nutrients_numbers, json_filename, amount_foods_to_process=3000)
+    main_method(api_key, nutrients_numbers, json_filename, amount_foods_to_process=2000)
